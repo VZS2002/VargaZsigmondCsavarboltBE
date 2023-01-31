@@ -10,7 +10,7 @@ import {
 import { DataSource } from 'typeorm';
 import { Csavar } from './csavar.entity';
 import { AppService } from './app.service';
-
+import { Rendeles } from './rendeles.entity';
 @Controller()
 export class AppController {
   constructor(
@@ -25,20 +25,48 @@ export class AppController {
   }
   @Get('api/csavar')
   async listCsavar() {
-    const aruhazRepo = this.dataSource.getRepository(Csavar);
-    return await aruhazRepo.find();
+    const csavarRepo = this.dataSource.getRepository(Csavar);
+    return await csavarRepo.find();
   }
 
   @Post('api/csavar')
   newCsavar(@Body() csavar: Csavar) {
     csavar.id = undefined;
-    const aruhazRepo = this.dataSource.getRepository(Csavar);
-    aruhazRepo.save(csavar);
+    const csavarRepo = this.dataSource.getRepository(Csavar);
+    csavarRepo.save(csavar);
   }
 
   @Delete('api/csavar/:id')
   deleteCsavar(@Param('id') id: number) {
-    const aruhazRepo = this.dataSource.getRepository(Csavar);
-    aruhazRepo.delete(id);
+    const csavarRepo = this.dataSource.getRepository(Csavar);
+    csavarRepo.delete(id);
+  }
+
+  @Post('api/csavarbolt/:id/rendeles')
+  async rendelesCsavar(
+    @Body() rendeles: Rendeles,
+    @Param('id') csavarId: number,
+  ) {
+    const rendelesRepo = this.dataSource.getRepository(Rendeles);
+    rendeles.id = undefined;
+    rendeles.csavar_id = csavarId;
+    const csavarRepo = this.dataSource.getRepository(Csavar);
+    const megrendelt = await csavarRepo.findOneBy({ id: csavarId });
+    megrendelt.keszlet = megrendelt.keszlet - rendeles.db;
+    console.log(megrendelt.ar * rendeles.db);
+    csavarRepo.save(megrendelt);
+    rendelesRepo.save(rendeles);
+  }
+
+  @Get('api/csavarbolt/rendeles')
+  async listRendeles() {
+    const rendelesRepo = this.dataSource.getRepository(Rendeles);
+    return await rendelesRepo.find();
+  }
+
+  @Delete('api/csavarbolt/rendeles/:id')
+  deleteRendeles(@Param('id') id: number) {
+    const rendelesRepo = this.dataSource.getRepository(Rendeles);
+    rendelesRepo.delete(id);
   }
 }
